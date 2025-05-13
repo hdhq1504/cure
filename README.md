@@ -1,12 +1,6 @@
-# Ứng dụng Clustering với React và Python
+# Phân cụm dữ liệu khách hàng với thuật toán CURE
 
-Đây là ứng dụng web cho phép người dùng tải lên dữ liệu và thực hiện phân cụm (clustering) sử dụng giao diện React và xử lý Python ở backend.
-
-## Yêu cầu hệ thống
-
-- Node.js (phiên bản 16.0 trở lên)
-- Python (phiên bản 3.8 trở lên)
-- npm hoặc yarn
+Đây là ứng dụng web cho phép người dùng tải lên dữ liệu khách hàng và thực hiện phân cụm dựa trên thuật toán CURE.
 
 ## Cài đặt
 
@@ -59,14 +53,6 @@ cd cure
 npm run dev
 ```
 Ứng dụng React sẽ chạy tại địa chỉ: http://localhost:5173
-
-### 3. Hướng dẫn sử dụng
-
-1. Mở trình duyệt web và truy cập http://localhost:5173
-2. Tải lên file dữ liệu mẫu (định dạng CSV)
-3. Cấu hình các thông số clustering
-4. Nhấn nút "Run Clustering" để thực hiện phân cụm
-5. Kết quả sẽ được hiển thị trực quan trên giao diện
 
 ## Lưu ý
 
