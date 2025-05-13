@@ -171,6 +171,73 @@ class CURE:
             
         return labels
 
+def preprocess_data(df: pd.DataFrame, numeric_columns: List[str]) -> tuple:
+    """
+    Tiền xử lý dữ liệu trước khi thực hiện phân cụm
+    """
+    # Chuyển đổi kiểu dữ liệu cho các cột số
+    for col in numeric_columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+        
+    # Xử lý missing values nếu có
+    df[numeric_columns] = df[numeric_columns].fillna(df[numeric_columns].mean())
+    
+    # Chuẩn hóa dữ liệu
+    scaler = StandardScaler()
+    scaled_data = scaler.fit_transform(df[numeric_columns])
+    
+    # Giảm chiều dữ liệu xuống 2D để visualization
+    pca = PCA(n_components=2)
+    pca_data = pca.fit_transform(scaled_data)
+    
+    return scaled_data, pca_data
+
+@app.post("/cluster/")
+async def create_cluster(
+    file: UploadFile = File(...),
+    config: str = Form(...),
+):
+    try:
+        # Đọc cấu hình
+        config_data = json.loads(config)
+        cure_config = CUREConfig(**config_data)
+        
+        # Đọc file CSV
+        content = await file.read()
+        df = pd.read_csv(io.StringIO(content.decode('utf-8')))
+        
+        # Tiền xử lý dữ liệu
+        scaled_data, pca_data = preprocess_data(df, cure_config.numeric_columns)
+        
+        # Thực hiện phân cụm
+        cure = CURE(
+            n_clusters=cure_config.n_clusters,
+            n_representatives=cure_config.n_representatives,
+            shrinking_factor=cure_config.shrinking_factor
+        )
+        cure.fit(scaled_data)
+        
+        # Chuyển đổi dữ liệu PCA thành định dạng JSON
+        pca_results = [
+            {"x": float(point[0]), "y": float(point[1])}
+            for point in pca_data
+        ]
+        
+        # Chuyển đổi đại diện cụm về dạng list
+        representatives_list = [[
+            rep.tolist() for rep in cluster_reps
+        ] for cluster_reps in cure.representatives]
+        
+        return ClusterResult(
+            labels=cure.labels_.tolist(),
+            representatives=representatives_list,
+            pca_data=pca_results,
+            columns_used=cure_config.numeric_columns
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @app.post("/api/upload-and-cluster/", response_model=ClusterResult)
 async def upload_and_cluster(
     file: UploadFile = File(...),

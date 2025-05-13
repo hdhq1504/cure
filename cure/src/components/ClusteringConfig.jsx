@@ -1,14 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Papa from 'papaparse';
 
 function ClusteringConfig({ uploadedFile, columns, setClusteringResults, setIsLoading, isLoading }) {
   const [numClusters, setNumClusters] = useState(3);
   const [numRepresentatives, setNumRepresentatives] = useState(10);
   const [shrinkingFactor, setShrinkingFactor] = useState(0.2);
   const [selectedColumns, setSelectedColumns] = useState([]);
+  const [numericColumns, setNumericColumns] = useState([]);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  // Kiểm tra và phân loại các cột số
+  useEffect(() => {
+    if (uploadedFile) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const text = e.target.result;
+        Papa.parse(text, {
+          header: true,
+          complete: (results) => {
+            const numeric = columns.filter(column => {
+              const values = results.data.map(row => row[column]).filter(val => val !== '' && val !== undefined);
+              return values.every(val => !isNaN(val) && val !== true && val !== false);
+            });
+            setNumericColumns(numeric);
+            console.log('Numeric columns detected:', numeric);
+          }
+        });
+      };
+      reader.readAsText(uploadedFile);
+    }
+  }, [uploadedFile, columns]);
 
   useEffect(() => {
     console.log('Available columns:', columns);
@@ -140,8 +164,11 @@ function ClusteringConfig({ uploadedFile, columns, setClusteringResults, setIsLo
                 id={`col-${column}`}
                 checked={selectedColumns.includes(column)}
                 onChange={() => handleColumnToggle(column)}
+                disabled={!numericColumns.includes(column)}
               />
-              <label htmlFor={`col-${column}`}>{column}</label>
+              <label htmlFor={`col-${column}`}>
+                {column} {!numericColumns.includes(column) && <span className="non-numeric">(không phải dữ liệu số)</span>}
+              </label>
             </div>
           ))}
         </div>
