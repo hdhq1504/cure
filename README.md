@@ -32,7 +32,7 @@ npm install
 ```bash
 # Đảm bảo môi trường ảo đã được kích hoạt (có prefix (venv) trước dòng lệnh)
 # Cài đặt các thư viện Python cần thiết
-pip install fastapi uvicorn pandas numpy scikit-learn
+pip install fastapi uvicorn pandas numpy scikit-learn python-multipart
 
 # Kiểm tra cài đặt thành công
 pip list
