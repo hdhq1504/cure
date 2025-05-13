@@ -202,10 +202,13 @@ async def upload_and_cluster(
             shrinking_factor=cure_config.shrinking_factor
         )
         cure.fit(X_scaled)
+        print('Cluster labels:\n', cure.labels_)
+        print('Cluster representatives:\n', cure.representatives)
         
         # Giảm chiều dữ liệu để trực quan hóa
         pca = PCA(n_components=2)
         X_pca = pca.fit_transform(X_scaled)
+        print('PCA data:\n', X_pca)
         
         # Chuẩn bị dữ liệu trả về
         pca_data = []
