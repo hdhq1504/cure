@@ -9,9 +9,7 @@ function App() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [columns, setColumns] = useState([]);
   const [clusteringResults, setClusteringResults] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); // Đảm bảo giá trị khởi tạo là false
-
-  console.log('App isLoading:', isLoading); // Thêm log để debug
+  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <Router>

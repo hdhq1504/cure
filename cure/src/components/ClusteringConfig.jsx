@@ -20,13 +20,20 @@ function ClusteringConfig({ uploadedFile, columns, setClusteringResults, setIsLo
         const text = e.target.result;
         Papa.parse(text, {
           header: true,
+          dynamicTyping: true,
+          skipEmptyLines: true,
           complete: (results) => {
             const numeric = columns.filter(column => {
-              const values = results.data.map(row => row[column]).filter(val => val !== '' && val !== undefined);
-              return values.every(val => !isNaN(val) && val !== true && val !== false);
+              const values = results.data.map(row => row[column]).filter(val => val !== '' && val !== undefined && val !== null);
+              return values.length > 0 && values.every(val => !isNaN(val) && val !== true && val !== false);
             });
             setNumericColumns(numeric);
             console.log('Numeric columns detected:', numeric);
+            
+            // Tự động chọn các cột số (tối đa 5 cột)
+            if (numeric.length > 0) {
+              setSelectedColumns(numeric.slice(0, Math.min(5, numeric.length)));
+            }
           }
         });
       };
@@ -34,29 +41,23 @@ function ClusteringConfig({ uploadedFile, columns, setClusteringResults, setIsLo
     }
   }, [uploadedFile, columns]);
 
-  useEffect(() => {
-    console.log('Available columns:', columns);
-    console.log('Selected columns:', selectedColumns);
-    console.log('isLoading:', isLoading);
-    console.log('Button should be enabled:', !isLoading && selectedColumns.length >= 2);
-  }, [columns, selectedColumns, isLoading]);
-
   const handleColumnToggle = (column) => {
     const newSelectedColumns = selectedColumns.includes(column) 
       ? selectedColumns.filter(col => col !== column)
       : [...selectedColumns, column];
     
-    console.log('Toggling column:', column);
-    console.log('Previous selected columns:', selectedColumns);
-    console.log('New selected columns:', newSelectedColumns);
-    
     setSelectedColumns(newSelectedColumns);
   };
 
+  const handleSelectAllColumns = () => {
+    setSelectedColumns([...numericColumns]);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedColumns([]);
+  };
+
   const handleSubmit = async () => {
-    console.log('Selected columns:', selectedColumns);
-    console.log('Number of selected columns:', selectedColumns.length);
-    
     if (selectedColumns.length < 2) {
       setError('Vui lòng chọn ít nhất 2 cột số để phân cụm');
       return;
@@ -97,27 +98,15 @@ function ClusteringConfig({ uploadedFile, columns, setClusteringResults, setIsLo
     }
   };
 
-  useEffect(() => {
-    console.log('Selected columns updated:', selectedColumns);
-  }, [selectedColumns]);
-
-  useEffect(() => {
-    console.log('ClusteringConfig State Update:');
-    console.log('- Selected Columns:', selectedColumns);
-    console.log('- Selected Count:', selectedColumns.length);
-    console.log('- isLoading:', isLoading);
-    console.log('- Button should be enabled:', !isLoading && selectedColumns.length >= 2);
-  }, [selectedColumns, isLoading]);
-
   return (
-    <div className="config-container">
-      <h2>Cấu hình thuật toán CURE</h2>
+    <div className="config-container p-4 bg-gray-50 rounded-lg shadow">
+      <h2 className="text-2xl font-bold mb-4 text-blue-700">Cấu hình thuật toán CURE</h2>
       
-      <div className="config-section">
-        <h3>Tham số thuật toán</h3>
+      <div className="config-section mb-6 bg-white p-4 rounded shadow">
+        <h3 className="text-lg font-semibold mb-3 text-gray-800">Tham số thuật toán</h3>
         
-        <div className="form-group">
-          <label htmlFor="num-clusters">Số lượng cụm:</label>
+        <div className="form-group mb-3">
+          <label htmlFor="num-clusters" className="block text-sm font-medium text-gray-700 mb-1">Số lượng cụm (2-10):</label>
           <input
             id="num-clusters"
             type="number"
@@ -125,11 +114,12 @@ function ClusteringConfig({ uploadedFile, columns, setClusteringResults, setIsLo
             max="20"
             value={numClusters}
             onChange={(e) => setNumClusters(parseInt(e.target.value))}
+            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
         
-        <div className="form-group">
-          <label htmlFor="num-representatives">Số điểm đại diện mỗi cụm:</label>
+        <div className="form-group mb-3">
+          <label htmlFor="num-representatives" className="block text-sm font-medium text-gray-700 mb-1">Số điểm đại diện mỗi cụm (5-20):</label>
           <input
             id="num-representatives"
             type="number"
@@ -137,11 +127,12 @@ function ClusteringConfig({ uploadedFile, columns, setClusteringResults, setIsLo
             max="50"
             value={numRepresentatives}
             onChange={(e) => setNumRepresentatives(parseInt(e.target.value))}
+            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
         
-        <div className="form-group">
-          <label htmlFor="shrinking-factor">Hệ số co (0-1):</label>
+        <div className="form-group mb-3">
+          <label htmlFor="shrinking-factor" className="block text-sm font-medium text-gray-700 mb-1">Hệ số co (0-1):</label>
           <input
             id="shrinking-factor"
             type="number"
@@ -150,34 +141,65 @@ function ClusteringConfig({ uploadedFile, columns, setClusteringResults, setIsLo
             step="0.1"
             value={shrinkingFactor}
             onChange={(e) => setShrinkingFactor(parseFloat(e.target.value))}
+            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
       </div>
       
-      <div className="config-section">
-        <h3>Chọn các thuộc tính số cho phân cụm</h3>
-        <div className="columns-list">
+      <div className="config-section mb-6 bg-white p-4 rounded shadow">
+        <h3 className="text-lg font-semibold mb-3 text-gray-800">Chọn các thuộc tính số cho phân cụm</h3>
+        
+        <div className="mb-3 flex gap-2">
+          <button 
+            onClick={handleSelectAllColumns}
+            className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+            disabled={numericColumns.length === 0}
+          >
+            Chọn tất cả
+          </button>
+          <button 
+            onClick={handleClearSelection}
+            className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700"
+            disabled={selectedColumns.length === 0}
+          >
+            Bỏ chọn tất cả
+          </button>
+        </div>
+        
+        <div className="columns-list grid grid-cols-2 md:grid-cols-3 gap-2">
           {columns.map(column => (
-            <div key={column} className="column-item">
-              <input
-                type="checkbox"
-                id={`col-${column}`}
-                checked={selectedColumns.includes(column)}
-                onChange={() => handleColumnToggle(column)}
-                disabled={!numericColumns.includes(column)}
-              />
-              <label htmlFor={`col-${column}`}>
-                {column} {!numericColumns.includes(column) && <span className="non-numeric">(không phải dữ liệu số)</span>}
-              </label>
+            <div key={column} className={`column-item p-2 rounded ${numericColumns.includes(column) ? 'bg-gray-50' : 'bg-gray-100'}`}>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`col-${column}`}
+                  checked={selectedColumns.includes(column)}
+                  onChange={() => handleColumnToggle(column)}
+                  disabled={!numericColumns.includes(column)}
+                  className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 rounded"
+                />
+                <label htmlFor={`col-${column}`} className={`text-sm ${!numericColumns.includes(column) ? 'text-gray-500' : ''}`}>
+                  {column} 
+                  {!numericColumns.includes(column) && <span className="block text-xs text-red-500">(không phải dữ liệu số)</span>}
+                </label>
+              </div>
             </div>
           ))}
         </div>
+        
+        <div className="mt-4 text-sm text-gray-700">
+          <p>Đã chọn {selectedColumns.length}/{numericColumns.length} cột số.</p>
+          {selectedColumns.length > 0 && (
+            <p className="mt-1">Các cột đã chọn: {selectedColumns.join(', ')}</p>
+          )}
+        </div>
       </div>
       
-      {error && <p className="error">{error}</p>}
+      {error && <p className="error p-3 bg-red-100 text-red-700 rounded mb-4">{error}</p>}
       
       <button 
-        className="submit-button" 
+        className={`submit-button py-2 px-6 rounded font-medium text-white 
+          ${isLoading || selectedColumns.length < 2 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`} 
         onClick={handleSubmit}
         disabled={isLoading || selectedColumns.length < 2}
       >

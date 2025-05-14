@@ -8,6 +8,7 @@ import json
 from pydantic import BaseModel
 import io
 from sklearn.decomposition import PCA
+from pyclustering.cluster.cure import cure
 
 app = FastAPI()
 
@@ -32,145 +33,6 @@ class ClusterResult(BaseModel):
     pca_data: List[Dict[str, float]]
     columns_used: List[str]
 
-# Thuật toán CURE
-class CURE:
-    def __init__(self, n_clusters=2, n_representatives=10, shrinking_factor=0.2):
-        self.n_clusters = n_clusters
-        self.n_representatives = n_representatives
-        self.shrinking_factor = shrinking_factor
-        self.representatives = []
-        self.labels_ = None
-        
-    def fit(self, X):
-        n_samples, n_features = X.shape
-        
-        # Bước 1: Khởi tạo mỗi điểm là một cụm riêng biệt
-        clusters = []
-        for i in range(n_samples):
-            clusters.append({
-                'points': [X[i]],
-                'representatives': [X[i]],
-                'centroid': X[i]
-            })
-            
-        # Thuật toán tham lam cho phân cụm phân tầng
-        while len(clusters) > self.n_clusters:
-            # Tìm cặp cụm gần nhất
-            min_dist = float('inf')
-            merge_i, merge_j = 0, 0
-            
-            for i in range(len(clusters)):
-                for j in range(i+1, len(clusters)):
-                    # Tính khoảng cách giữa các đại diện
-                    min_rep_dist = float('inf')
-                    for rep_i in clusters[i]['representatives']:
-                        for rep_j in clusters[j]['representatives']:
-                            dist = np.linalg.norm(rep_i - rep_j)
-                            min_rep_dist = min(min_rep_dist, dist)
-                    
-                    if min_rep_dist < min_dist:
-                        min_dist = min_rep_dist
-                        merge_i, merge_j = i, j
-            
-            # Hợp nhất 2 cụm gần nhất
-            new_cluster = self._merge_clusters(clusters[merge_i], clusters[merge_j])
-            
-            # Xóa 2 cụm cũ và thêm cụm mới
-            if merge_i > merge_j:
-                del clusters[merge_i]
-                del clusters[merge_j]
-            else:
-                del clusters[merge_j]
-                del clusters[merge_i]
-            
-            clusters.append(new_cluster)
-            
-        # Lưu trữ đại diện cuối cùng cho mỗi cụm
-        self.representatives = [cluster['representatives'] for cluster in clusters]
-        
-        # Xác định nhãn cho từng điểm dữ liệu
-        self.labels_ = np.zeros(n_samples, dtype=int)
-        for i, point in enumerate(X):
-            min_dist = float('inf')
-            best_cluster = 0
-            
-            for cluster_idx, cluster in enumerate(clusters):
-                for rep in cluster['representatives']:
-                    dist = np.linalg.norm(point - rep)
-                    if dist < min_dist:
-                        min_dist = dist
-                        best_cluster = cluster_idx
-                        
-            self.labels_[i] = best_cluster
-            
-        return self
-    
-    def _merge_clusters(self, cluster1, cluster2):
-        # Kết hợp các điểm
-        merged_points = cluster1['points'] + cluster2['points']
-        
-        # Tính tâm mới
-        merged_centroid = np.mean(merged_points, axis=0)
-        
-        # Chọn đại diện mới
-        all_points = np.array(merged_points)
-        if len(all_points) <= self.n_representatives:
-            representatives = all_points
-        else:
-            # Chọn những điểm cách xa nhau nhất làm đại diện
-            representatives = [all_points[0]]
-            
-            while len(representatives) < self.n_representatives and len(representatives) < len(all_points):
-                max_min_dist = -1
-                farthest_point = None
-                
-                for point in all_points:
-                    if any(np.array_equal(point, rep) for rep in representatives):
-                        continue
-                        
-                    min_dist = min(np.linalg.norm(point - rep) for rep in representatives)
-                    
-                    if min_dist > max_min_dist:
-                        max_min_dist = min_dist
-                        farthest_point = point
-                        
-                if farthest_point is not None:
-                    representatives.append(farthest_point)
-                else:
-                    break
-            
-            representatives = np.array(representatives)
-        
-        # Thu gọn các điểm đại diện về phía tâm cụm
-        shrunk_representatives = []
-        for rep in representatives:
-            shrunk_rep = rep + self.shrinking_factor * (merged_centroid - rep)
-            shrunk_representatives.append(shrunk_rep)
-        
-        return {
-            'points': merged_points,
-            'representatives': shrunk_representatives,
-            'centroid': merged_centroid
-        }
-    
-    def predict(self, X):
-        labels = np.zeros(len(X), dtype=int)
-        
-        for i, point in enumerate(X):
-            min_dist = float('inf')
-            best_cluster = 0
-            
-            for cluster_idx, reps in enumerate(self.representatives):
-                for rep in reps:
-                    dist = np.linalg.norm(point - rep)
-                    if dist < min_dist:
-                        min_dist = dist
-                        best_cluster = cluster_idx
-                        
-            labels[i] = best_cluster
-            
-        return labels
-
 def preprocess_data(df: pd.DataFrame, numeric_columns: List[str]) -> tuple:
     """
     Tiền xử lý dữ liệu trước khi thực hiện phân cụm
@@ -190,7 +52,7 @@ def preprocess_data(df: pd.DataFrame, numeric_columns: List[str]) -> tuple:
     pca = PCA(n_components=2)
     pca_data = pca.fit_transform(scaled_data)
     
-    return scaled_data, pca_data
+    return scaled_data, pca_data, pca
 
 @app.post("/cluster/")
 async def create_cluster(
@@ -207,29 +69,48 @@ async def create_cluster(
         df = pd.read_csv(io.StringIO(content.decode('utf-8')))
         
         # Tiền xử lý dữ liệu
-        scaled_data, pca_data = preprocess_data(df, cure_config.numeric_columns)
+        scaled_data, pca_data, _ = preprocess_data(df, cure_config.numeric_columns)
+        
+        # Tạo instance CURE từ thư viện pyclustering
+        cure_instance = cure(
+            data=scaled_data.tolist(),
+            number_cluster=cure_config.n_clusters,
+            number_represent_points=cure_config.n_representatives,
+            compression=cure_config.shrinking_factor
+        )
         
         # Thực hiện phân cụm
-        cure = CURE(
-            n_clusters=cure_config.n_clusters,
-            n_representatives=cure_config.n_representatives,
-            shrinking_factor=cure_config.shrinking_factor
-        )
-        cure.fit(scaled_data)
+        cure_instance.process()
+        
+        # Lấy clusters
+        clusters = cure_instance.get_clusters()
+        
+        # Lấy nhãn cho từng điểm dữ liệu
+        labels = np.zeros(len(scaled_data), dtype=int)
+        for cluster_idx, cluster in enumerate(clusters):
+            for point_idx in cluster:
+                labels[point_idx] = cluster_idx
+        
+        # Lấy đại diện của các cụm
+        representatives = cure_instance.get_representors()
+        representatives_list = []
+        
+        # Chuyển đổi định dạng representatives
+        for i in range(cure_config.n_clusters):
+            # Đảm bảo đủ số lượng cụm
+            if i < len(representatives):
+                representatives_list.append([rep.tolist() for rep in representatives[i]])
+            else:
+                representatives_list.append([])
         
         # Chuyển đổi dữ liệu PCA thành định dạng JSON
         pca_results = [
-            {"x": float(point[0]), "y": float(point[1])}
-            for point in pca_data
+            {"x": float(point[0]), "y": float(point[1]), "cluster": int(labels[i])}
+            for i, point in enumerate(pca_data)
         ]
         
-        # Chuyển đổi đại diện cụm về dạng list
-        representatives_list = [[
-            rep.tolist() for rep in cluster_reps
-        ] for cluster_reps in cure.representatives]
-        
         return ClusterResult(
-            labels=cure.labels_.tolist(),
+            labels=labels.tolist(),
             representatives=representatives_list,
             pca_data=pca_results,
             columns_used=cure_config.numeric_columns
@@ -257,50 +138,62 @@ async def upload_and_cluster(
         if not all(col in df.columns for col in numeric_columns):
             raise HTTPException(status_code=400, detail="Một số cột không tồn tại trong dữ liệu")
         
-        # Chuẩn hóa dữ liệu
-        X = df[numeric_columns].values
-        scaler = StandardScaler()
-        X_scaled = scaler.fit_transform(X)
+        # Tiền xử lý dữ liệu
+        scaled_data, _, pca = preprocess_data(df, numeric_columns)
         
-        # Áp dụng thuật toán CURE
-        cure = CURE(
-            n_clusters=cure_config.n_clusters,
-            n_representatives=cure_config.n_representatives,
-            shrinking_factor=cure_config.shrinking_factor
+        # Khởi tạo thuật toán CURE
+        cure_instance = cure(
+            data=scaled_data.tolist(),
+            number_cluster=cure_config.n_clusters,
+            number_represent_points=cure_config.n_representatives,
+            compression=cure_config.shrinking_factor,
+            ccore=True  # Sử dụng C-core implementation nếu có
         )
-        cure.fit(X_scaled)
-        print('Cluster labels:\n', cure.labels_)
-        print('Cluster representatives:\n', cure.representatives)
         
-        # Giảm chiều dữ liệu để trực quan hóa
-        pca = PCA(n_components=2)
-        X_pca = pca.fit_transform(X_scaled)
-        print('PCA data:\n', X_pca)
+        # Thực hiện phân cụm
+        cure_instance.process()
         
-        # Chuẩn bị dữ liệu trả về
+        # Lấy clusters
+        clusters = cure_instance.get_clusters()
+        
+        # Lấy nhãn cho từng điểm dữ liệu
+        labels = np.zeros(len(scaled_data), dtype=int)
+        for cluster_idx, cluster in enumerate(clusters):
+            for point_idx in cluster:
+                labels[point_idx] = cluster_idx
+        
+        # Lấy đại diện của các cụm
+        representatives = cure_instance.get_representors()
+        
+        # Tính PCA cho dữ liệu
+        X_pca = pca.transform(scaled_data)
+        
+        # Chuẩn bị dữ liệu PCA
         pca_data = []
         for i, (x, y) in enumerate(X_pca):
             pca_data.append({
                 "x": float(x),
                 "y": float(y),
-                "cluster": int(cure.labels_[i])
+                "cluster": int(labels[i])
             })
         
         # Chuẩn bị dữ liệu đại diện cho các cụm
         reps_pca = []
-        for cluster_idx, reps in enumerate(cure.representatives):
-            cluster_reps_pca = []
-            for rep in reps:
-                # Chuyển đổi đại diện sang không gian 2D
-                rep_pca = pca.transform([rep])[0]
-                cluster_reps_pca.append([float(rep_pca[0]), float(rep_pca[1])])
-            reps_pca.append(cluster_reps_pca)
+        for cluster_reps in representatives:
+            # Chuyển đổi đại diện sang không gian 2D
+            cluster_reps_np = np.array(cluster_reps)
+            if len(cluster_reps) > 0:
+                reps_transformed = pca.transform(cluster_reps_np)
+                reps_pca.append(reps_transformed.tolist())
+            else:
+                reps_pca.append([])
         
         return ClusterResult(
-            labels=cure.labels_.tolist(),
+            labels=labels.tolist(),
             representatives=reps_pca,
             pca_data=pca_data,
-            columns_used=numeric_columns
+            columns_used=numeric_columns,
+            feature_names=numeric_columns
         )
         
     except Exception as e:
