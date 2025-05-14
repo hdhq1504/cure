@@ -1,6 +1,6 @@
 # Phân cụm dữ liệu khách hàng với thuật toán CURE
 
-Đây là ứng dụng web cho phép người dùng tải lên dữ liệu khách hàng và thực hiện phân cụm dựa trên thuật toán CURE.
+Đây là ứng dụng web phân cụm dữ liệu khách hàng nhằm hỗ trợ doanh nghiệp đưa ra các chiến lược marketing phù hợp dựa trên thuật toán CURE.
 
 ## Cài đặt
 
@@ -14,14 +14,14 @@ python -m venv venv
 .\venv\Scripts\Activate.ps1
 
 # Nếu sử dụng Command Prompt thay vì PowerShell
-# .\venv\Scripts\activate.bat
+.\venv\Scripts\activate.bat
 ```
 
 ### 2. Cài đặt các dependencies cho Frontend (React)
 
 ```bash
 # Di chuyển vào thư mục frontend
-cd cure
+cd web
 
 # Cài đặt các thư viện cần thiết
 npm install
@@ -32,7 +32,7 @@ npm install
 ```bash
 # Đảm bảo môi trường ảo đã được kích hoạt (có prefix (venv) trước dòng lệnh)
 # Cài đặt các thư viện Python cần thiết
-pip install fastapi uvicorn pandas numpy scikit-learn python-multipart
+pip install fastapi uvicorn pandas numpy scikit-learn python-multipart pyclustering
 
 # Kiểm tra cài đặt thành công
 pip list
@@ -46,7 +46,7 @@ pip list
 
 ```bash
 # Di chuyển vào thư mục frontend
-cd cure
+cd web
 
 ```bash
 # Trong thư mục cure
