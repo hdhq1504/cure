@@ -1,6 +1,6 @@
 # Phân cụm dữ liệu khách hàng với thuật toán CURE
 
-Đây là ứng dụng web phân cụm dữ liệu khách hàng nhằm hỗ trợ doanh nghiệp đưa ra các chiến lược marketing phù hợp dựa trên thuật toán CURE.
+Ứng dụng web phân nhóm khách hàng nhằm hỗ trợ doanh nghiệp đưa ra các chiến lược marketing phù hợp dựa trên thuật toán CURE.
 
 ## Cài đặt
 
@@ -21,7 +21,7 @@ python -m venv venv
 
 ```bash
 # Di chuyển vào thư mục frontend
-cd web
+cd frontend
 
 # Cài đặt các thư viện cần thiết
 npm install
@@ -46,9 +46,8 @@ pip list
 
 ```bash
 # Di chuyển vào thư mục frontend
-cd web
+cd frontend
 
-```bash
 # Trong thư mục cure
 npm run dev
 ```
