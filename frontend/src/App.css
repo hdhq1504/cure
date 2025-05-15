@@ -219,3 +219,89 @@
   border-radius: 6px;
   margin-top: 20px;
 }
+
+/* Clustering Results Component Styles */
+.clustering-results {
+  padding: 20px;
+}
+
+.chart-controls {
+  margin-bottom: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tabs button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tabs button:hover {
+  background-color: #e0e0e0;
+}
+
+.tabs button.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.chart-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.cluster-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cluster-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cluster-item:hover {
+  background-color: #e9ecef;
+}
+
+.cluster-item.selected {
+  background-color: #007bff;
+  color: white;
+}
+
+.color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.cluster-name {
+  font-weight: 500;
+}
+
+.cluster-count {
+  color: #6c757d;
+}
+
+.cluster-item.selected .cluster-count {
+  color: #e9ecef;
+}
