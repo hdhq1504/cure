@@ -32,6 +32,7 @@ class ClusterResult(BaseModel):
     representatives: List[List[List[float]]]
     pca_data: List[Dict[str, float]]
     columns_used: List[str]
+    features: Dict[str, List[float]]
 
 def preprocess_data(df: pd.DataFrame, numeric_columns: List[str]) -> tuple:
     """
@@ -188,12 +189,17 @@ async def upload_and_cluster(
             else:
                 reps_pca.append([])
         
+        # Trích xuất các giá trị thuộc tính cho mỗi cột được sử dụng
+        features = {}
+        for col in numeric_columns:
+            features[col] = df[col].tolist()
+
         return ClusterResult(
             labels=labels.tolist(),
             representatives=reps_pca,
             pca_data=pca_data,
             columns_used=numeric_columns,
-            feature_names=numeric_columns
+            features=features
         )
         
     except Exception as e:
