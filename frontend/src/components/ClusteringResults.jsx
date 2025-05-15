@@ -76,28 +76,28 @@ function ClusteringResults({ results }) {
       case 'heatmap':
         if (!results.features) {
           return <div className="p-4 bg-yellow-100 text-yellow-800 rounded">
-            Không có dữ liệu thuộc tính để hiển thị biểu đồ nhiệt. Vui lòng cập nhật API để trả về thuộc tính features.
+            Không có dữ liệu thuộc tính để hiển thị.
           </div>;
         }
         return <HeatmapPlot data={clusterData} features={results.features} />;
       case 'boxplot':
         if (!results.features) {
           return <div className="p-4 bg-yellow-100 text-yellow-800 rounded">
-            Không có dữ liệu thuộc tính để hiển thị biểu đồ hộp. Vui lòng cập nhật API để trả về thuộc tính features.
+            Không có dữ liệu thuộc tính để hiển thị.
           </div>;
         }
         return <BoxPlot data={clusterData} features={results.features} />;
       case 'radar':
         if (!results.features) {
           return <div className="p-4 bg-yellow-100 text-yellow-800 rounded">
-            Không có dữ liệu thuộc tính để hiển thị biểu đồ radar. Vui lòng cập nhật API để trả về thuộc tính features.
+            Không có dữ liệu thuộc tính để hiển thị.
           </div>;
         }
         return <RadarChart data={clusterData} features={results.features} />;
       case 'representatives':
         if (!results.representatives || results.representatives.length === 0) {
           return <div className="p-4 bg-yellow-100 text-yellow-800 rounded">
-            Không có dữ liệu về các điểm đại diện. Vui lòng kiểm tra lại kết quả trả về từ API.
+            Không có dữ liệu để hiển thị.
           </div>;
         }
         return <RepresentativesPlot data={clusterData} representatives={results.representatives} />;
