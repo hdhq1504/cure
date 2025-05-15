@@ -106,7 +106,7 @@ function ClusteringConfig({ uploadedFile, columns, setClusteringResults, setIsLo
         <h3 className="text-lg font-semibold mb-3 text-gray-800">Tham số thuật toán</h3>
         
         <div className="form-group mb-3">
-          <label htmlFor="num-clusters" className="block text-sm font-medium text-gray-700 mb-1">Số lượng cụm (2-10):</label>
+          <label htmlFor="num-clusters" className="block text-sm font-medium text-gray-700 mb-1">Số lượng cụm:</label>
           <input
             id="num-clusters"
             type="number"
@@ -119,7 +119,7 @@ function ClusteringConfig({ uploadedFile, columns, setClusteringResults, setIsLo
         </div>
         
         <div className="form-group mb-3">
-          <label htmlFor="num-representatives" className="block text-sm font-medium text-gray-700 mb-1">Số điểm đại diện mỗi cụm (5-20):</label>
+          <label htmlFor="num-representatives" className="block text-sm font-medium text-gray-700 mb-1">Số điểm đại diện mỗi cụm:</label>
           <input
             id="num-representatives"
             type="number"
