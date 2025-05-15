@@ -24,7 +24,7 @@ python -m venv venv
 cd frontend
 
 # Cài đặt các thư viện cần thiết
-npm install
+npm install react-dom react-plotly.js axios papaparse
 ```
 
 ### 3. Cài đặt các thư viện Python
