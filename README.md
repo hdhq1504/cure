@@ -48,7 +48,6 @@ pip list
 # Di chuyển vào thư mục frontend
 cd frontend
 
-```bash
 # Trong thư mục cure
 npm run dev
 ```
