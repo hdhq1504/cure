@@ -21,7 +21,7 @@ python -m venv venv
 
 ```bash
 # Di chuyển vào thư mục frontend
-cd web
+cd frontend
 
 # Cài đặt các thư viện cần thiết
 npm install
@@ -46,7 +46,7 @@ pip list
 
 ```bash
 # Di chuyển vào thư mục frontend
-cd web
+cd frontend
 
 ```bash
 # Trong thư mục cure
