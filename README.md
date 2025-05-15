@@ -1,6 +1,6 @@
 # Phân cụm dữ liệu khách hàng với thuật toán CURE
 
-Đây là ứng dụng web phân cụm dữ liệu khách hàng nhằm hỗ trợ doanh nghiệp đưa ra các chiến lược marketing phù hợp dựa trên thuật toán CURE.
+Ứng dụng web phân nhóm khách hàng nhằm hỗ trợ doanh nghiệp đưa ra các chiến lược marketing phù hợp dựa trên thuật toán CURE.
 
 ## Cài đặt
 
