@@ -15,7 +15,7 @@ function App() {
     <Router>
       <div className="app">
         <header className="app-header">
-          <h1>Phân cụm dữ liệu khách hàng với CURE</h1>
+          <h1>Phân nhóm khách hàng với CURE</h1>
           <nav>
             <ul>
               <li><Link to="/">Tải dữ liệu</Link></li>
