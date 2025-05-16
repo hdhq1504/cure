@@ -53,12 +53,9 @@ npm run dev
 ```
 Ứng dụng React sẽ chạy tại địa chỉ: http://localhost:5173
 
-## Lưu ý
+## Giao diện ứng dụng
 
-- Đảm bảo môi trường ảo Python (venv) được kích hoạt mỗi khi làm việc với dự án
-- Đảm bảo file CSV đúng định dạng và chứa dữ liệu phù hợp
-- Kiểm tra các thông số clustering phù hợp với dữ liệu của bạn
-- Có thể điều chỉnh các tham số trong file cấu hình để tối ưu kết quả
+
 
 ## Xử lý lỗi thường gặp
 
