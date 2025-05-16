@@ -55,7 +55,9 @@ npm run dev
 
 ## Giao diện ứng dụng
 
-
+![Giao diện tải dữ liệu khách hàng](assets/images/1.png)
+![Giao diện điều chỉnh tham số](assets/images/2.png)
+![Giao diện trực quan hóa dữ liệu](assets/images/3.png)
 
 ## Xử lý lỗi thường gặp
 
